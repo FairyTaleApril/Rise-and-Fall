@@ -1,0 +1,4 @@
+# Ignored folders and files
+.git/
+.idea/
+__pycache__/
