@@ -4,6 +4,16 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
 
+def logistic(height_map: np.ndarray):
+    lowest = np.min(height_map)
+    altitude_range = np.max(height_map) - lowest
+    return 1 / (1 + np.e ** (4 - 3 * (height_map - lowest) / altitude_range))
+
+
+def linear(height_map: np.ndarray):
+    return height_map
+
+
 class PerlinNoiseMap:
     def __init__(self, width, height, octaves_list=None, seed=1):
         self.width = width
@@ -11,16 +21,17 @@ class PerlinNoiseMap:
 
         self.noise = []
         if octaves_list is None:
-            octaves_list = [3, 6, 12, 24]
+            octaves_list = [3, 6, 12]
+            # octaves_list = [3, 6, 12, 24]
         for octaves in octaves_list:
             self.noise.append(PerlinNoise(octaves=octaves, seed=seed))
 
         self.map = None
         self.terrain_colors = 'terrain'
 
-    def generate_map(self, gradient_scale=1.0, persistence=0.5, lacunarity=2.0):
+    def generate_map(self, max_height, frequency=1, gradient_scale=1.0, persistence=0.5, lacunarity=2.0, func=logistic):
         amplitude = 1
-        frequency = 1
+        frequency = frequency
 
         self.map = np.zeros((self.height, self.width))
 
@@ -47,8 +58,7 @@ class PerlinNoiseMap:
             amplitude *= persistence
             frequency *= lacunarity
 
-    def get_map(self):
-        return self.map
+        self.map = max_height * func(self.map)
 
     def display_map(self):
         plt.imshow(self.map, cmap=self.terrain_colors)
