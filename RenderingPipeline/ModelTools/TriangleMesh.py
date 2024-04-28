@@ -1,0 +1,49 @@
+import numpy as np
+from Global import *
+from RenderingPipeline.RayTracingTools.Intersection import *
+
+
+class TriangleMesh:
+    def __init__(self, v0, v1, v2, material):
+        self.v0 = v0
+        self.v1 = v1
+        self.v2 = v2
+        self.material = material
+        self.e1 = v1 - v0
+        self.e2 = v2 - v0
+        self.N = normalize(np.cross(self.e1, self.e2))
+        self.area = 0.5 * np.linalg.norm(np.cross(self.e1, self.e2))
+
+    def detect_intersect(self, ray):
+        inter = Intersection()
+
+        ray_cross_e2 = np.cross(ray.direction, self.e2)
+        det = np.dot(self.e1, ray_cross_e2)
+
+        if abs(det) < epsilon:
+            return inter
+
+        inv_det = 1.0 / det
+        s = ray.origin - self.v0
+        u = inv_det * np.dot(s, ray_cross_e2)
+
+        if u < 0 or u > 1:
+            return inter
+
+        s_cross_e1 = np.cross(s, self.e1)
+        v = inv_det * np.dot(ray.direction, s_cross_e1)
+
+        if v < 0 or u + v > 1:
+            return inter
+
+        t = inv_det * np.dot(self.e2, s_cross_e1)
+
+        if t > epsilon:
+            inter.happened = True
+            inter.coords = ray.point(t)
+            inter.normal = self.N
+            inter.obj = self
+            inter.uv_coords = [u, v]
+        return inter
+
+

@@ -6,41 +6,55 @@ from matplotlib.colors import ListedColormap
 
 class PerlinNoiseMap:
     def __init__(self, width, height, octaves_list=None, seed=1):
-        self.__width = width
-        self.__height = height
+        self.width = width
+        self.height = height
 
-        self.__noise = []
+        self.noise = []
         if octaves_list is None:
             octaves_list = [3, 6, 12, 24]
         for octaves in octaves_list:
-            self.__noise.append(PerlinNoise(octaves=octaves, seed=seed))
+            self.noise.append(PerlinNoise(octaves=octaves, seed=seed))
 
-        self.__map = None
-        self.__terrain_colors = 'terrain'
+        self.map = None
+        self.terrain_colors = 'terrain'
 
-    def generate_map(self, persistence=0.5, lacunarity=2.0):
+    def generate_map(self, gradient_scale=1.0, persistence=0.5, lacunarity=2.0):
         amplitude = 1
         frequency = 1
 
-        self.__map = np.zeros((self.__height, self.__width))
-        for noise in self.__noise:
-            for y in range(self.__height):
-                for x in range(self.__width):
-                    sample_y = y * frequency / self.__height
-                    sample_x = x * frequency / self.__width
+        self.map = np.zeros((self.height, self.width))
 
-                    self.__map[y, x] += amplitude * noise([sample_y, sample_x])
+        gradient_magnitude_list = []
+        for noise in self.noise:
+            # TODO: Show progress
+            noise_map = np.zeros((self.height, self.width))
+            for y in range(self.height):
+                for x in range(self.width):
+                    sample_y = y * frequency / self.height
+                    sample_x = x * frequency / self.width
+
+                    perlin_value = amplitude * noise([sample_y, sample_x])
+                    noise_map[y, x] += perlin_value
+
+            gradient_x, gradient_y = np.gradient(noise_map)
+            gradient_magnitude = np.sqrt(gradient_x ** 2 + gradient_y ** 2)
+            gradient_magnitude_list.append(gradient_magnitude)
+
+            reduce_map = 1 / (1 + gradient_scale * np.sum(gradient_magnitude_list, axis=0))
+
+            self.map += (noise_map - reduce_map) / len(self.noise)
 
             amplitude *= persistence
             frequency *= lacunarity
 
     def get_map(self):
-        return self.__map
+        return self.map
 
     def display_map(self):
-        plt.imshow(self.__map, cmap=self.__terrain_colors)
+        plt.imshow(self.map, cmap=self.terrain_colors)
+        plt.colorbar()
         plt.show()
 
     def set_terrain_colors(self, terrain_colors):
-        self.__terrain_colors = ListedColormap(terrain_colors)
+        self.terrain_colors = ListedColormap(terrain_colors)
 

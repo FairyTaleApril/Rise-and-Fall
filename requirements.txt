@@ -1,3 +1,6 @@
 numpy
 matplotlib
 perlin_noise
+pillow
+trimesh
+pyglet<2
