@@ -132,17 +132,6 @@ class TriangleMesh:
     def get_bounds(self):
         return self.bounding_box
 
-    def get_surface_properties(self, P, I, index, uv, N, st):
-        v0 = self.triangles[index].v0
-        v1 = self.triangles[index].v1
-        v2 = self.triangles[index].v2
-        e0 = np.normalize(v1 - v0)
-        e1 = np.normalize(v2 - v1)
-        N = np.normalize(np.cross(e0, e1))
-        st0 = self.stCoordinates[self.vertexIndex[index * 3]]
-        st1 = self.stCoordinates[self.vertexIndex[index * 3 + 1]]
-        st2 = self.stCoordinates[self.vertexIndex[index * 3 + 2]]
-        st = st0 * (1 - uv.x - uv.y) + st1 * uv.x + st2 * uv.y
 
     def eval_diffuse_color(self, st):
         scale = 5
