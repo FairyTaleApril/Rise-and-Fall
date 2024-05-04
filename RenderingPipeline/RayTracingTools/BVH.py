@@ -28,7 +28,58 @@ class BVH:
         self.total_primitives = None
         self.interior_nodes = None
 
-    def detext_intersect(self, ray):
+    def recursive_build(self, objects):
+        node = BVHNode()
+
+        bounds = None
+        for obj in objects:
+            if bounds is None:
+                bounds = obj.Bound
+            else:
+                bounds = Bound.union(bounds, obj.Bound)
+
+        if len(objects) == 1:
+            node.Bound = objects[0].Bound
+            node.obj = objects[0]
+            node.left = None
+            node.right = None
+            return node
+        elif len(objects) == 2:
+            node.left = self.recursive_build([objects[0]])
+            node.right = self.recursive_build([objects[1]])
+
+            node.Bound = Bound.union(node.left.Bound, node.right.Bound)
+            return node
+        else:
+            centroid_bounds = None
+            for obj in objects:
+                if centroid_bounds is None:
+                    centroid_bounds = obj.Bound.get_centroid()
+                else:
+                    centroid_bounds = Bound.union(centroid_bounds, obj.Bound.get_centroid())
+
+            dim = centroid_bounds.max_extent()
+            objects.sort(key=lambda f: f.Bound.get_centroid()[dim])
+
+            beginning = objects[:len(objects)//2]
+            middling = objects[len(objects)//2:]
+            ending = objects
+
+            left_shapes = beginning
+            right_shapes = middling
+
+            assert len(objects) == (len(left_shapes) + len(right_shapes))
+
+            node.left = self.recursive_build(left_shapes)
+            node.right = self.recursive_build(right_shapes)
+
+            node.Bound = Bound.union(node.left.Bound, node.right.Bound)
+
+        return node
+
+    
+
+    def BVH_detect_intersect(self, ray):
         inter = Intersection()
 
         if not self.root:
@@ -37,7 +88,8 @@ class BVH:
         inter = self.recursive_detext_intersect(self.root, ray)
         return inter
 
-    def recursive_detext_intersect(self, node: BVHNode, ray):
+
+    def recursive_detect_intersect(self, node: BVHNode, ray):
         inter = node.Bound.detect_intersect(ray)
 
         if not inter.happened:
