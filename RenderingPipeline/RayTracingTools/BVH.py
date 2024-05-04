@@ -1,6 +1,7 @@
 import numpy as np
-from enum import Enum
+import time
 
+from enum import Enum
 from RenderingPipeline.RayTracingTools.Intersection import *
 
 
@@ -28,6 +29,8 @@ class BVH:
         self.total_primitives = None
         self.interior_nodes = None
 
+
+
     def recursive_build(self, objects):
         node = BVHNode()
 
@@ -36,7 +39,7 @@ class BVH:
             if bounds is None:
                 bounds = obj.Bound
             else:
-                bounds = Bound.union(bounds, obj.Bound)
+                bounds = obj.Bound.union(bounds, obj.Bound)
 
         if len(objects) == 1:
             node.Bound = objects[0].Bound
@@ -48,7 +51,7 @@ class BVH:
             node.left = self.recursive_build([objects[0]])
             node.right = self.recursive_build([objects[1]])
 
-            node.Bound = Bound.union(node.left.Bound, node.right.Bound)
+            node.Bound = obj.Bound.union(node.left.Bound, node.right.Bound)
             return node
         else:
             centroid_bounds = None
@@ -56,7 +59,7 @@ class BVH:
                 if centroid_bounds is None:
                     centroid_bounds = obj.Bound.get_centroid()
                 else:
-                    centroid_bounds = Bound.union(centroid_bounds, obj.Bound.get_centroid())
+                    centroid_bounds = obj.Bound.union(centroid_bounds, obj.Bound.get_centroid())
 
             dim = centroid_bounds.max_extent()
             objects.sort(key=lambda f: f.Bound.get_centroid()[dim])
@@ -73,11 +76,12 @@ class BVH:
             node.left = self.recursive_build(left_shapes)
             node.right = self.recursive_build(right_shapes)
 
-            node.Bound = Bound.union(node.left.Bound, node.right.Bound)
+            node.Bound = obj.Bound.union(node.left.Bound, node.right.Bound)
 
         return node
 
-    
+
+
 
     def BVH_detect_intersect(self, ray):
         inter = Intersection()
