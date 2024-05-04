@@ -39,14 +39,6 @@ def lerp(v0, v1, t):
     return (1 - t) * v0 + t * v1
 
 
-class Ray:
-    def __init__(self, origin, direction):
-        self.origin = origin
-        self.direction = direction
-
-    def point(self, t):
-        return self.origin + t * self.direction
-
 
 class Intersection:
     def __init__(self):
@@ -67,6 +59,36 @@ class TriangleMesh:
         self.e2 = v2 - v0
         self.N = normalize(np.cross(self.e1, self.e2))
         self.area = 0.5 * np.linalg.norm(np.cross(self.e1, self.e2))
+
+        meshes_obj = Meshes()
+        self.meshes = meshes_obj.meshes
+
+        mesh = self.meshes[0]
+
+        min_vert = np.array([float('inf'), float('inf'), float('inf')])
+        max_vert = np.array([-float('inf'), -float('inf'), -float('inf')])
+
+        self.triangles = []
+        for i in range(0, len(mesh.vertices), 3):
+            face_vertices = []
+            for j in range(3):
+                vert = np.array([mesh.vertices[i + j].position.x,
+                                 mesh.vertices[i + j].position.y,
+                                 mesh.vertices[i + j].position.z]) * 60.0
+                face_vertices.append(vert)
+
+                min_vert = np.minimum(min_vert, vert)
+                max_vert = np.maximum(max_vert, vert)
+
+            new_mat = Material()
+            new_mat.Kd = 0.6
+            new_mat.Ks = 0.0
+            new_mat.specular_exponent = 0
+
+            self.triangles.append(TriangleMesh(face_vertices[0], face_vertices[1], face_vertices[2], new_mat))
+
+        self.bounding_box = Bound.bound3(min_vert, max_vert)
+
 
     def detect_intersect(self, ray):
         inter = Intersection()
@@ -101,73 +123,11 @@ class TriangleMesh:
             inter.uv_coords = [u, v]
         return inter
 
-    def intersect(self, ray):
-        return True
-
-    def intersect(self, ray, tnear, index):
-        return False
-
-    def get_bounds(self):
-        return Bounds3(self.v0, self.v1).union(self.v2)
-
-    def eval_diffuse_color(self, st):
-        return np.array([0.5, 0.5, 0.5])
-
-
-class MeshTriangle():
-    def __init__(self, filename):
-        loader.load_file(filename)
-
-        assert len(loader.loaded_meshes) == 1
-        mesh = loader.loaded_meshes[0]
-
-        min_vert = np.array([float('inf'), float('inf'), float('inf')])
-        max_vert = np.array([-float('inf'), -float('inf'), -float('inf')])
-
-        self.triangles = []
-        for i in range(0, len(mesh.vertices), 3):
-            face_vertices = []
-            for j in range(3):
-                vert = np.array([mesh.vertices[i + j].position.x,
-                                 mesh.vertices[i + j].position.y,
-                                 mesh.vertices[i + j].position.z]) * 60.0
-                face_vertices.append(vert)
-
-                min_vert = np.minimum(min_vert, vert)
-                max_vert = np.maximum(max_vert, vert)
-
-            # new_mat = Material(MaterialType.Diffuse, np.array([0.5, 0.5, 0.5]), np.array([0, 0, 0]))
-            new_mat = Material()
-            new_mat.Kd = 0.6
-            new_mat.Ks = 0.0
-            new_mat.specular_exponent = 0
-
-            self.triangles.append(TriangleMesh(face_vertices[0], face_vertices[1], face_vertices[2], new_mat))
-
-        self.bounding_box = Bound(min_vert, max_vert)
-
-        ptrs = []
-        for tri in self.triangles:
-            ptrs.append(tri)
-
-        self.bvh = BVH(ptrs)
-
-    def intersect(self, ray):
-        return True
-
-    def intersect(self, ray, tnear, index):
-        intersect = False
-        for k in range(len(self.triangles)):
-            v0 = self.triangles[k].v0
-            v1 = self.triangles[k].v1
-            v2 = self.triangles[k].v2
-            t, u, v = 0, 0, 0
-            if ray_triangle_intersect(v0, v1, v2, ray.origin, ray.direction, t, u, v) and t < tnear:
-                tnear = t
-                index = k
-                intersect |= True
-
-        return intersect
+    # def intersect(self, ray):
+    #     return True
+    #
+    # def intersect(self, ray, tnear, index):
+    #     return False
 
     def get_bounds(self):
         return self.bounding_box
