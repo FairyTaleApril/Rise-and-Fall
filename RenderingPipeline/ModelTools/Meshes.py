@@ -22,6 +22,7 @@ class Meshes:
         self.faces = self.obj.faces
         self.vertices = self.obj.vertices
         self.create_meshes()
+        print('Model file successfully loaded: ' + filepath)
 
     def set_meshes(self, obj, faces, vertices):
         self.obj = obj
