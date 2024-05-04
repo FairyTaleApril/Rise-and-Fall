@@ -2,7 +2,7 @@ import numpy as np
 import time
 
 from enum import Enum
-from RenderingPipeline.RayTracingTools.Intersection import *
+from Intersection import *
 
 
 class SplitMethod(Enum):
