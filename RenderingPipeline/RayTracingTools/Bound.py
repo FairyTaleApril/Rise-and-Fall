@@ -58,3 +58,13 @@ class Bound:
 
     def inside(self, point):
         return np.all(point >= self.coords_min) and np.all(point <= self.coords_max)
+
+    def union(b1, b2):
+        p_min = np.minimum(b1.pMin, b2.pMin)
+        p_max = np.maximum(b1.pMax, b2.pMax)
+        return Bound(p_min, p_max)
+
+    def union_with_point(b, p):
+        p_min = np.minimum(b.pMin, p)
+        p_max = np.maximum(b.pMax, p)
+        return Bound(p_min, p_max)
