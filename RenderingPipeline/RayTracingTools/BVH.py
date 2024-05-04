@@ -8,6 +8,11 @@ from RenderingPipeline.RayTracingTools.Intersection import *
 class SplitMethod(Enum):
     NAIVE = 1
     SAH = 2
+    
+    def __init__(self, p, maxPrimsInNode=1, splitMethod=SplitMethod.NAIVE):
+        self.maxPrimsInNode = maxPrimsInNode
+        self.splitMethod = splitMethod
+        self.primitives = p
 
 
 class BVHNode:
