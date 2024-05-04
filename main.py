@@ -15,8 +15,8 @@ if __name__ == '__main__':
     perlin_map.generate_map(max_height=200, frequency=2, gradient_scale=-1.0, persistence=0.1, lacunarity=2)
     perlin_map.display_map()
 
-    terrain = Object()
-    terrain.set_obj_from_map(perlin_map.map)
+    # terrain = Object()
+    # terrain.set_obj_from_map(perlin_map.map)
 
     # scene = Scene(width, height, 90)
 

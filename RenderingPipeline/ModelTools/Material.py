@@ -5,7 +5,7 @@ from PIL import Image
 
 class MaterialType(Enum):
     Diffuse = 1
-    DiffuseAndGlossy = 2
+    Reflection_Refraction = 2
 
 
 class Material:

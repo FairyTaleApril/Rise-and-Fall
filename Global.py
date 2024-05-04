@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 
@@ -14,6 +15,8 @@ def normalize(vector):
 
 def deg2rad(deg):
     return deg * np.pi / 180.0
+
+
 
 
 

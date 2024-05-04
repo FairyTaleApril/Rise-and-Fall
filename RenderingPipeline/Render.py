@@ -1,8 +1,6 @@
-import math
 import os
 import random
 import threading
-import numpy as np
 from Global import *
 from RayTracingTools.Ray import *
 
@@ -20,12 +18,12 @@ class Render:
         self.frame_buffer = np.zeros((self.scene.height, self.scene.width, 3), dtype=np.float32)
 
         num_threads = min(os.cpu_count(), 8)
-        lines = self.scene.height // num_threads + 1
+        rows = self.scene.height // num_threads + 1
         workers = []
 
         for i in range(num_threads):
-            y0 = i * lines
-            y1 = min(y0 + lines, self.scene.height)
+            y0 = i * rows
+            y1 = min(y0 + rows, self.scene.height)
             worker = threading.Thread(target=self.render_thread, args=(y0, y1))
             workers.append(worker)
             worker.start()

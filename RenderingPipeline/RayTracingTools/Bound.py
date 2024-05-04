@@ -1,5 +1,8 @@
 import numpy as np
 
+from RenderingPipeline.RayTracingTools.Intersection import *
+
+
 class Bound:
     def __init__(self, triangle):
         self.coords_min = np.array([min(triangle.v0[0], triangle.v1[0], triangle.v2[0]),
@@ -12,8 +15,9 @@ class Bound:
     def get_centroid(self):
         return 0.5 * (self.coords_min + self.coords_max)
 
-
     def detect_intersect(self, ray):
+        inter = Intersection()
+
         # Calculate inv_dir and dir_is_neg from ray direction
         inv_dir = np.array([1.0 / ray.direction[0], 1.0 / ray.direction[1], 1.0 / ray.direction[2]])
         dir_is_neg = [int(ray.direction[i] > 0) for i in range(3)]
@@ -30,18 +34,15 @@ class Bound:
             t_exit = min(max_value, t_exit)
 
         return t_enter <= t_exit and t_exit >= 0
-    
 
     def surface_area(self):
         d = self.coords_max - self.coords_min
         return 2 * (d[0] * d[1] + d[0] * d[2] + d[1] * d[2])
 
-
     def intersect(self, other):
         p_min = np.maximum(self.coords_min, other.coords_min)
         p_max = np.minimum(self.coords_max, other.coords_max)
         return Bound(p_min, p_max)
-
 
     def offset(self, point):
         o = point - self.coords_min
@@ -49,16 +50,11 @@ class Bound:
             o /= self.coords_max - self.coords_min
         return o
 
-
     def overlaps(self, other):
         x = (self.coords_max[0] >= other.coords_min[0]) and (self.coords_min[0] <= other.coords_max[0])
         y = (self.coords_max[1] >= other.coords_min[1]) and (self.coords_min[1] <= other.coords_max[1])
         z = (self.coords_max[2] >= other.coords_min[2]) and (self.coords_min[2] <= other.coords_max[2])
         return x and y and z
 
-
     def inside(self, point):
         return np.all(point >= self.coords_min) and np.all(point <= self.coords_max)
-
-
-

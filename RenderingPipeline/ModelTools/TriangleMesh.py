@@ -2,12 +2,10 @@ import numpy as np
 from Global import *
 from RenderingPipeline.RayTracingTools.Intersection import *
 
-import numpy as np
-from math import fabs
-import Object  # You need to create or import this module for loading OBJ files
 import Material
-from Bound import Bounds3  # You need to define this class for bounding box calculations
-from BVH import BVHAccel  # You need to define this class for bounding volume hierarchy acceleration structure
+from RenderingPipeline.RayTracingTools.Bound import *
+from RenderingPipeline.RayTracingTools.BVH import *
+
 
 def ray_triangle_intersect(v0, v1, v2, orig, dir, tnear, u, v):
     edge1 = v1 - v0
@@ -35,8 +33,10 @@ def ray_triangle_intersect(v0, v1, v2, orig, dir, tnear, u, v):
 
     return True
 
+
 def lerp(v0, v1, t):
     return (1 - t) * v0 + t * v1
+
 
 class Ray:
     def __init__(self, origin, direction):
@@ -54,6 +54,7 @@ class Intersection:
         self.normal = None
         self.obj = None
         self.uv_coords = None
+
 
 class TriangleMesh:
     def __init__(self, v0, v1, v2, material):
@@ -92,6 +93,7 @@ class TriangleMesh:
 
         if t > epsilon:
             inter.happened = True
+            inter.t = t
             inter.coords = ray.point(t)
             inter.normal = self.N
             inter.obj = self
@@ -154,7 +156,6 @@ class MeshTriangle(Object):
     def intersect(self, ray):
         return True
 
-
     def intersect(self, ray, tnear, index):
         intersect = False
         for k in range(len(self.triangles)):
@@ -188,6 +189,3 @@ class MeshTriangle(Object):
         scale = 5
         pattern = ((st.x * scale) % 1 > 0.5) ^ ((st.y * scale) % 1 > 0.5)
         return lerp(np.array([0.815, 0.235, 0.031]), np.array([0.937, 0.937, 0.231]), pattern)
-
-
-
