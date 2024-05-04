@@ -49,8 +49,8 @@ class Material:
 
         color = (v_img - v_min) * color1 + (v_max - v_img) * color2
 
-        self.color = color
-        return self.color
+        self.texture = color
+        return self.texture
         # return self.texture[u, v]
 
 
