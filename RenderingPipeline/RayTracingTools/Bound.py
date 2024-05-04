@@ -11,6 +11,12 @@ class Bound:
         self.coords_max = np.array([max(triangle.v0[0], triangle.v1[0], triangle.v2[0]),
                                     max(triangle.v0[1], triangle.v1[1], triangle.v2[1]),
                                     max(triangle.v0[2], triangle.v1[2], triangle.v2[2])])
+        self.pMin = None
+        self.pMax = None
+
+    def bound3(self, p1, p2):
+        self.pMin = np.array([min(p1[0], p2[0]), min(p1[1], p2[1]), min(p1[2], p2[2])])
+        self.pMax = np.array([max(p1[0], p2[0]), max(p1[1], p2[1]), max(p1[2], p2[2])])
 
     def get_centroid(self):
         return 0.5 * (self.coords_min + self.coords_max)
