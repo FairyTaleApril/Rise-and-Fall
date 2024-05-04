@@ -41,9 +41,6 @@ class Bound:
 
         return t_enter <= t_exit and t_exit >= 0
 
-    def surface_area(self):
-        d = self.coords_max - self.coords_min
-        return 2 * (d[0] * d[1] + d[0] * d[2] + d[1] * d[2])
 
     def intersect(self, other):
         p_min = np.maximum(self.coords_min, other.coords_min)

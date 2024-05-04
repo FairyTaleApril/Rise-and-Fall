@@ -1,8 +1,10 @@
 import os
 import random
 import threading
+import matplotlib.pyplot as plt
+
 from Global import *
-from RayTracingTools.Ray import *
+from RenderingPipeline.RayTracingTools.Ray import *
 
 
 class Render:
@@ -31,13 +33,16 @@ class Render:
         for worker in workers:
             worker.join()
 
-        return self.frame_buffer
+        plt.figure('Scene')
+        plt.imshow(self.frame_buffer)
+        plt.show()
 
     def render_thread(self, y0, y1):
         for y in range(y0, y1):
             for x in range(self.scene.width):
                 index = y * self.scene.width + x
                 for k in range(self.spp):
+                    # TODO: 视角变换
                     sample_x = (2 * (x + random.random()) / self.scene.width - 1) * self.image_aspect_ratio * self.scale
                     sample_y = (1 - 2 * (y + random.random()) / self.scene.height) * self.scale
                     direction = normalize(np.array([sample_x, sample_y, 1]))

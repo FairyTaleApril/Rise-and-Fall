@@ -51,13 +51,13 @@ class Scene:
         self.height = height
         self.fov = fov
         self.max_depth = 5
-        self.objects = []
+        self.meshes_list = []
         self.lights = []
         self.bvh = None
 
     def add(self, obj):
-        if isinstance(obj, Object):
-            self.objects.append(obj)
+        if isinstance(obj, Meshes):
+            self.meshes_list.append(obj)
         elif isinstance(obj, Light):
             self.lights.append(obj)
 
