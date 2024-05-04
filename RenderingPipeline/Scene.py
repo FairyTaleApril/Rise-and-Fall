@@ -1,6 +1,6 @@
 from Global import *
 from RenderingPipeline.Light.Light import *
-from RenderingPipeline.ModelTools.Object import *
+from RenderingPipeline.ModelTools.Meshes import *
 from RenderingPipeline.ModelTools.Material import *
 from RenderingPipeline.RayTracingTools.BVH import *
 from RenderingPipeline.RayTracingTools.Ray import *
@@ -85,6 +85,7 @@ class Scene:
                 La = Ka * amb_light_intensity
                 result_color = La
 
+                # TODO: Shadow
                 for light in self.lights:
                     l = normalize(light.coords - inter.coords)
                     I_r2 = light.intensity / (np.linalg.norm(light.coords - inter.coords) ** 2)

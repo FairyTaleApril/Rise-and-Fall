@@ -1,10 +1,11 @@
 import numpy as np
 from Global import *
-from RenderingPipeline.RayTracingTools.Intersection import *
 
-import Material
+from RenderingPipeline.ModelTools.Material import *
+from RenderingPipeline.ModelTools.Meshes import *
 from RenderingPipeline.RayTracingTools.Bound import *
 from RenderingPipeline.RayTracingTools.BVH import *
+from RenderingPipeline.RayTracingTools.Intersection import *
 
 
 def ray_triangle_intersect(v0, v1, v2, orig, dir, tnear, u, v):
@@ -113,10 +114,8 @@ class TriangleMesh:
         return np.array([0.5, 0.5, 0.5])
 
 
-class MeshTriangle(Object):
+class MeshTriangle():
     def __init__(self, filename):
-        # Load mesh from OBJ file
-        loader = Object.Loader()
         loader.load_file(filename)
 
         assert len(loader.loaded_meshes) == 1
@@ -138,20 +137,20 @@ class MeshTriangle(Object):
                 max_vert = np.maximum(max_vert, vert)
 
             # new_mat = Material(MaterialType.Diffuse, np.array([0.5, 0.5, 0.5]), np.array([0, 0, 0]))
-            new_mat = Material.init()
+            new_mat = Material()
             new_mat.Kd = 0.6
             new_mat.Ks = 0.0
             new_mat.specular_exponent = 0
 
             self.triangles.append(TriangleMesh(face_vertices[0], face_vertices[1], face_vertices[2], new_mat))
 
-        self.bounding_box = Bounds3(min_vert, max_vert)
+        self.bounding_box = Bound(min_vert, max_vert)
 
         ptrs = []
         for tri in self.triangles:
             ptrs.append(tri)
 
-        self.bvh = BVHAccel(ptrs)
+        self.bvh = BVH(ptrs)
 
     def intersect(self, ray):
         return True

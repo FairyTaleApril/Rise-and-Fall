@@ -4,3 +4,5 @@ perlin_noise
 pillow
 trimesh
 pyglet<2
+scipy
+trimesh[all]
