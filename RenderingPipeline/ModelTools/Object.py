@@ -39,3 +39,22 @@ class Object:
         self.obj.show()
 
 
+class Loader:
+    def __init__(self):
+        self.LoadedMeshes = []
+
+    def load_file(self, Path):
+        # If the file is not an .obj file return false
+        if not Path.endswith('.obj'):
+            return False
+
+        try:
+            self.LoadedMeshes.append(trimesh.load_mesh(Path))
+            return True
+        except FileNotFoundError:
+            return False
+
+
+
+
+

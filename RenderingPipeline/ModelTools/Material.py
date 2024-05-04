@@ -31,12 +31,4 @@ class Material:
     #     # TODO: Bilinear interpolation
     #     return self.texture.getpixel((u, v))
 
-    def get_type(self):
-        return self.material_type
-
-    def get_color(self):
-        return self.color
-
-    def get_emission(self):
-        return self.emission
 

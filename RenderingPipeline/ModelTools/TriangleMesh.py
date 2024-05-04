@@ -47,25 +47,6 @@ class Ray:
         return self.origin + t * self.direction
 
 
-class Object:
-    def intersect(self, ray):
-        raise NotImplementedError()
-
-    def intersect(self, ray, tnear, index):
-        raise NotImplementedError()
-
-    def get_intersection(self, ray):
-        raise NotImplementedError()
-
-    def get_surface_properties(self, P, I, index, uv, N, st):
-        raise NotImplementedError()
-
-    def eval_diffuse_color(self, st):
-        raise NotImplementedError()
-
-    def get_bounds(self):
-        raise NotImplementedError()
-
 class Intersection:
     def __init__(self):
         self.happened = False
@@ -133,7 +114,7 @@ class TriangleMesh:
 class MeshTriangle(Object):
     def __init__(self, filename):
         # Load mesh from OBJ file
-        loader = objloader.Loader()
+        loader = Object.Loader()
         loader.load_file(filename)
 
         assert len(loader.loaded_meshes) == 1
