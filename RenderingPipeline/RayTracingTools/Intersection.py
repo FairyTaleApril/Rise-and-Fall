@@ -4,7 +4,7 @@ class Intersection:
         self.t = None
         self.coords = None
         self.N = None
-        self.obj = None
+        self.triangle_mesh = None
         self.material = None
         self.uv_coords = None
         

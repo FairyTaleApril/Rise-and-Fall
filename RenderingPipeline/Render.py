@@ -12,12 +12,17 @@ class Render:
         self.scene = scene
         self.eye_coords = eye_coords
         self.spp = spp
+
         self.scale = math.tan(deg2rad(scene.fov * 0.5))
         self.image_aspect_ratio = scene.width / scene.height
+
         self.frame_buffer = None
+
+        self.progress = 0
 
     def render(self):
         self.frame_buffer = np.zeros((self.scene.height, self.scene.width, 3), dtype=np.float32)
+        self.progress = 0
 
         num_threads = min(os.cpu_count(), 8)
         rows = self.scene.height // num_threads + 1
@@ -37,14 +42,25 @@ class Render:
         plt.imshow(self.frame_buffer)
         plt.show()
 
+        print('Render complete')
+
     def render_thread(self, y0, y1):
         for y in range(y0, y1):
             for x in range(self.scene.width):
-                index = y * self.scene.width + x
                 for k in range(self.spp):
                     # TODO: 视角变换
                     sample_x = (2 * (x + random.random()) / self.scene.width - 1) * self.image_aspect_ratio * self.scale
                     sample_y = (1 - 2 * (y + random.random()) / self.scene.height) * self.scale
                     direction = normalize(np.array([sample_x, sample_y, 1]))
                     ray = Ray(self.eye_coords, direction)
-                    self.frame_buffer[index] += self.scene.castRay(ray, 0) / self.spp
+                    self.frame_buffer[y, x] += self.scene.cast_ray(ray, 0) / self.spp
+
+            self.update_progress()
+
+    def update_progress(self):
+        self.progress += 1
+        percentage = 100 * self.progress / self.scene.height
+        if percentage == 100:
+            print('\rRendering progress: 100.0%', flush=True)
+        else:
+            print('\rRendering progress: {:.1f}%'.format(percentage), end='', flush=True)

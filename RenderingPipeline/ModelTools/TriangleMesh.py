@@ -1,94 +1,28 @@
 import numpy as np
-from Global import *
 
-from RenderingPipeline.ModelTools.Material import *
+from Global import *
 from RenderingPipeline.ModelTools.Meshes import *
 from RenderingPipeline.RayTracingTools.Bound import *
 from RenderingPipeline.RayTracingTools.BVH import *
 from RenderingPipeline.RayTracingTools.Intersection import *
 
 
-def ray_triangle_intersect(v0, v1, v2, orig, dir, tnear, u, v):
-    edge1 = v1 - v0
-    edge2 = v2 - v0
-    pvec = np.cross(dir, edge2)
-    det = np.dot(edge1, pvec)
-    if det == 0 or det < 0:
-        return False
-
-    tvec = orig - v0
-    u = np.dot(tvec, pvec)
-    if u < 0 or u > det:
-        return False
-
-    qvec = np.cross(tvec, edge1)
-    v = np.dot(dir, qvec)
-    if v < 0 or u + v > det:
-        return False
-
-    invDet = 1 / det
-
-    tnear = np.dot(edge2, qvec) * invDet
-    u *= invDet
-    v *= invDet
-
-    return True
-
-
-def lerp(v0, v1, t):
-    return (1 - t) * v0 + t * v1
-
-
-
-class Intersection:
-    def __init__(self):
-        self.happened = False
-        self.coords = None
-        self.normal = None
-        self.obj = None
-        self.uv_coords = None
-
-
 class TriangleMesh:
-    def __init__(self, v0, v1, v2, material):
+    def __init__(self, v0, v1, v2, material, N=None):
         self.v0 = v0
         self.v1 = v1
         self.v2 = v2
         self.material = material
+
         self.e1 = v1 - v0
         self.e2 = v2 - v0
         self.N = normalize(np.cross(self.e1, self.e2))
+
         self.area = 0.5 * np.linalg.norm(np.cross(self.e1, self.e2))
 
-        meshes_obj = Meshes()
-        self.meshes = meshes_obj.meshes
-
-        mesh = self.meshes[0]
-
-        min_vert = np.array([float('inf'), float('inf'), float('inf')])
-        max_vert = np.array([-float('inf'), -float('inf'), -float('inf')])
-
-        self.triangles = []
-        for i in range(0, len(mesh.vertices), 3):
-            face_vertices = []
-            for j in range(3):
-                vert = np.array([mesh.vertices[i + j].position.x,
-                                 mesh.vertices[i + j].position.y,
-                                 mesh.vertices[i + j].position.z]) * 60.0
-                face_vertices.append(vert)
-
-                min_vert = np.minimum(min_vert, vert)
-                max_vert = np.maximum(max_vert, vert)
-
-            new_mat = Material()
-            new_mat.Kd = 0.6
-            new_mat.Ks = 0.0
-            new_mat.specular_exponent = 0
-
-            self.triangles.append(TriangleMesh(face_vertices[0], face_vertices[1], face_vertices[2], new_mat))
-
-        self.bounding_box = Bound.bound3(min_vert, max_vert)
-
+        p_min = np.minimum(np.minimum(v0, v1), v2)
+        p_max = np.maximum(np.maximum(v0, v1), v2)
+        self.bound = Bound(p_min, p_max)
 
     def detect_intersect(self, ray):
         inter = Intersection()
@@ -118,22 +52,8 @@ class TriangleMesh:
             inter.happened = True
             inter.t = t
             inter.coords = ray.point(t)
-            inter.normal = self.N
-            inter.obj = self
+            inter.N = self.N
+            inter.triangle_mesh = self
+            inter.material = self.material
             inter.uv_coords = [u, v]
         return inter
-
-    # def intersect(self, ray):
-    #     return True
-    #
-    # def intersect(self, ray, tnear, index):
-    #     return False
-
-    def get_bounds(self):
-        return self.bounding_box
-
-
-    def eval_diffuse_color(self, st):
-        scale = 5
-        pattern = ((st.x * scale) % 1 > 0.5) ^ ((st.y * scale) % 1 > 0.5)
-        return lerp(np.array([0.815, 0.235, 0.031]), np.array([0.937, 0.937, 0.231]), pattern)

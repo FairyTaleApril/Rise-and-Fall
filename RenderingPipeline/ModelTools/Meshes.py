@@ -1,45 +1,41 @@
 import numpy as np
 import trimesh
 
-from RenderingPipeline.RayTracingTools.Bound import *
 from RenderingPipeline.ModelTools.TriangleMesh import *
 from RenderingPipeline.ModelTools.Material import *
 
 
 class Meshes:
-    def __init__(self):
+    def __init__(self, material):
         self.obj = None
         self.faces = None
         self.vertices = None
 
-        self.meshes = None
+        self.triangle_meshes = None
         self.bounds = None
 
-        self.material = None
+        self.material = material
 
     def read_obj(self, filepath):
-        self.obj = trimesh.load(filepath)
+        self.obj: trimesh.Trimesh = trimesh.load(filepath)
         self.faces = self.obj.faces
         self.vertices = self.obj.vertices
+
         self.create_meshes()
+
         print('Model file successfully loaded: ' + filepath)
 
-    def set_meshes(self, obj, faces, vertices):
-        self.obj = obj
-        self.faces = faces
-        self.vertices = vertices
-        self.create_meshes()
-
     def create_meshes(self):
-        self.meshes = []
+        self.triangle_meshes = []
         self.bounds = []
 
-        for face in self.faces:
-            mesh = TriangleMesh(self.vertices[face[0]], self.vertices[face[1]], self.vertices[face[2]], self.material)
-            self.meshes.append(mesh)
+        for i in range(len(self.faces)):
+            mesh = TriangleMesh(self.vertices[self.faces[i][0]], self.vertices[self.faces[i][1]],
+                                self.vertices[self.faces[i][2]], self.material)
+            self.triangle_meshes.append(mesh)
             self.bounds.append(mesh.bound)
 
-        self.meshes = np.array(self.meshes)
+        self.triangle_meshes = np.array(self.triangle_meshes)
         self.bounds = np.array(self.bounds)
 
     def set_material(self, material):

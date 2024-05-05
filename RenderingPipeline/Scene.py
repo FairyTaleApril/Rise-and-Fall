@@ -1,4 +1,5 @@
-from Global import *
+import numpy as np
+
 from RenderingPipeline.Light.Light import *
 from RenderingPipeline.ModelTools.Meshes import *
 from RenderingPipeline.ModelTools.Material import *
@@ -46,48 +47,58 @@ def fresnel(I, N, ior):
 
 
 class Scene:
-    def __init__(self, width, height, fov):
+    def __init__(self, width, height, fov, background_color=np.array([0.0, 0.0, 0.0])):
         self.width = width
         self.height = height
         self.fov = fov
-        self.max_depth = 5
+        self.background_color = background_color
+
+        self.max_depth = 4
+
         self.meshes_list = []
         self.lights = []
         self.bvh = None
 
-    def add(self, obj):
-        if isinstance(obj, Meshes):
-            self.meshes_list.append(obj)
-        elif isinstance(obj, Light):
-            self.lights.append(obj)
+    def add(self, meshes):
+        if isinstance(meshes, Meshes):
+            self.meshes_list.append(meshes)
+        elif isinstance(meshes, Light):
+            self.lights.append(meshes)
 
     def build_BVH(self):
-        self.bvh = BVH(self.objects, 1, SplitMethod.NAIVE)
+        triangle_meshes = []
+        for meshes in self.meshes_list:
+            for triangle_mesh in meshes.triangle_meshes:
+                triangle_meshes.append(triangle_mesh)
+        self.bvh = BVH(triangle_meshes)
+
+        print('BVH successfully built')
 
     def cast_ray(self, ray: Ray, depth):
         if depth > self.max_depth:
-            return np.array([0, 0, 0], dtype=np.float32)
+            return self.background_color
 
-        inter = self.bvh.detext_intersect(ray)
+        inter: Intersection = self.bvh.detect_intersect(ray)
 
         if inter.happened:
             if inter.material.material_type is MaterialType.Diffuse:
-                if inter.material.texture:
-                    texture_color = inter.material.get_color_at(inter.uv_coords[0], inter.uv_coords[1])
-                else:
-                    texture_color = np.array([0, 0, 0], dtype=np.float32)
+                hit_point = inter.coords + inter.N * epsilon if np.dot(ray.direction, inter.N) < 0\
+                    else inter.coords - inter.N * epsilon
 
-                Ka = inter.material.Ka
-                Kd = texture_color / 255.0
+                texture_color = inter.material.get_color_at(inter.uv_coords[0], inter.uv_coords[1])
+                Kd = inter.material.Kd
                 Ks = inter.material.Ks
 
-                amb_light_intensity = np.array([10.0, 10.0, 10.0])
-                La = Ka * amb_light_intensity
+                La = inter.material.Ka * texture_color
                 result_color = La
 
-                # TODO: Shadow
                 for light in self.lights:
                     l = normalize(light.coords - inter.coords)
+
+                    shadow_inter: Intersection = self.bvh.detect_intersect(Ray(hit_point, l))
+                    if shadow_inter.happened:
+                        continue
+
                     I_r2 = light.intensity / (np.linalg.norm(light.coords - inter.coords) ** 2)
                     Ld = Kd * I_r2 * max(0.0, float(np.dot(inter.N, l)))
 
@@ -109,3 +120,5 @@ class Scene:
 
                 kr = fresnel(ray.direction, inter.N, inter.material.ior)
                 return reflection_color * kr + refraction_color * (1 - kr)
+        else:
+            return self.background_color

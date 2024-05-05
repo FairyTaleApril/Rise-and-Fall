@@ -33,7 +33,7 @@ class PerlinNoiseMap:
 
         self.progress = 0
 
-    def generate_map(self, max_height, frequency=1, gradient_scale=1.0, persistence=0.5, lacunarity=2.0, func=logistic):
+    def generate_map(self, max_height, frequency=1, gradient_scale=1.0, persistence=0.5, lacunarity=2.0, func=linear):
         amplitude = 1
         frequency = frequency
 
@@ -85,7 +85,11 @@ class PerlinNoiseMap:
 
     def update_progress(self):
         self.progress += 1
-        print('\rProgress: {:.2f}%'.format(100 * self.progress / (len(self.noise) * self.height)), end='', flush=True)
+        percentage = 100 * self.progress / (len(self.noise) * self.height)
+        if percentage == 100:
+            print('\rGenerate map progress: 100.0%', flush=True)
+        else:
+            print('\rGenerate map progress: {:.1f}%'.format(percentage), end='', flush=True)
 
     def display_map(self):
         plt.imshow(self.map, cmap=self.terrain_colors)

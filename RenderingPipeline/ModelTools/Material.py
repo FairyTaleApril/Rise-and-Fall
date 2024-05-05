@@ -9,15 +9,17 @@ class MaterialType(Enum):
 
 
 class Material:
-    def __init__(self, material_type=MaterialType.Diffuse, color=np.array([1, 1, 1]), emission=np.array([0, 0, 0]), ior=1,
-                 Ka=0.005, Ks=0.8, specular_exponent=100):
+    def __init__(self, material_type=MaterialType.Diffuse, color=np.array([100.0, 100.0, 100.0]),
+                 ior=0.8, Ka=0.005, Kd=0.6, Ks=0.8, specular_exponent=100):
         self.material_type = material_type
         self.color = color
-        self.emission = emission
+
         self.ior = ior
         self.Ka = Ka
+        self.Kd = Kd
         self.Ks = Ks
         self.specular_exponent = specular_exponent
+
         self.texture = None
         self.width = None
         self.height = None
@@ -27,31 +29,16 @@ class Material:
         self.width, self.height = self.texture.size
 
     def get_color_at(self, u, v):
+        if self.texture:
+            # TODO: 双线性插值
+            u_img = u * self.width
+            v_img = (1 - v) * self.height
 
-        u_img = u * self.width
-        v_img = (1 - v) * self.height
+            u1, v1 = int(u_img), int(v_img)
 
-        u_min = int(np.floor(u_img))
-        u_max = int(np.ceil(u_img))
-        v_min = int(np.floor(v_img))
-        v_max = int(np.ceil(v_img))
-
-        # Color_11 Color_12
-        # Color_21 Color_22
-        # in opencv, higher y in image->smaller v in texture
-        color_11 = self.texture[v_min, u_min]
-        color_12 = self.texture[v_min, u_max]
-        color_21 = self.texture[v_max, u_min]
-        color_22 = self.texture[v_max, u_max]
-
-        color1 = (u_img - u_min) * color_11 + (u_max - u_img) * color_12
-        color2 = (u_img - u_min) * color_21 + (u_max - u_img) * color_22
-
-        color = (v_img - v_min) * color1 + (v_max - v_img) * color2
-
-        self.texture = color
-        return self.texture
-        # return self.texture[u, v]
+            return self.texture[u1, v1]
+        else:
+            return self.color
 
 
 
