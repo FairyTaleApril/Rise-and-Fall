@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-import PerlinNoiseMap
+from Global import *
 from PerlinNoiseMap import PerlinNoiseGenerator
 from RenderingPipeline.ModelTools.Sphere import Sphere
 from RenderingPipeline.Render import *
@@ -16,16 +16,24 @@ min_height = 100
 spp = 1
 
 if __name__ == '__main__':
+    perlin_generator = PerlinNoiseGenerator()
+
     sphere = Sphere(100, 500)
-    # save_model(os.path.join('Asset', 'Model', 'sphere.obj'), sphere.vertices_list, sphere.faces)
-    # sphere_meshes = Meshes(filepath=os.path.join('Asset', 'Model', 'sphere.obj'))
+    # save_model(os.path.join('Asset', 'Model', 'sphere.ply'), sphere.vertices_list, sphere.faces)
+    # sphere_meshes = Meshes(filepath=os.path.join('Asset', 'Model', 'sphere.ply'))
     # sphere_meshes.obj.show()
 
-    perlin_generator = PerlinNoiseGenerator()
     perlin_generator.generate_planet(sphere, max_height, min_height)
-    save_model(os.path.join('Asset', 'Model', 'planet.obj'), sphere.vertices_list, sphere.faces)
-    sphere_meshes = Meshes(filepath=os.path.join('Asset', 'Model', 'planet.obj'))
+
+    vertex_colors = value_2_color(map_2_list(sphere.radii))
+
+    save_model(os.path.join('Asset', 'Model', 'planet.ply'),
+               map_2_list(sphere.vertices_map), sphere.faces, vertex_colors)
+
+    sphere_meshes = Meshes(filepath=os.path.join('Asset', 'Model', 'planet.ply'))
     sphere_meshes.obj.show()
+
+    perlin_generator.display_map(sphere.radii)
 
     # ocean_vertices, ocean_faces = perlin_generator.generate_planet(105, 100, 0)
     #
@@ -33,9 +41,9 @@ if __name__ == '__main__':
     # planet_faces = np.vstack((planet_faces, ocean_faces))
     # planet_vertices = np.vstack((planet_vertices, ocean_vertices))
 
-    # save_model(os.path.join('Asset', 'Model', 'planet.obj'), planet_vertices, planet_faces)
+    # save_model(os.path.join('Asset', 'Model', 'planet.ply'), planet_vertices, planet_faces)
     #
-    # planet = Meshes(filepath=os.path.join('Asset', 'Model', 'planet.obj'))
+    # planet = Meshes(filepath=os.path.join('Asset', 'Model', 'planet.ply'))
     # planet.obj.show()
 
     # terrain_map = perlin_generator.generate_map(width, height, max_height, min_height, func=PerlinNoiseMap.logistic,
@@ -43,10 +51,10 @@ if __name__ == '__main__':
     # perlin_generator.display_map(terrain_map)
     #
     # terrain_map_vertices, terrain_map_faces = convert_map_to_3d(terrain_map)
-    # save_map(os.path.join('Asset', 'Model', 'terrain.obj'), terrain_map_vertices, terrain_map_faces)
+    # save_map(os.path.join('Asset', 'Model', 'terrain.ply'), terrain_map_vertices, terrain_map_faces)
     #
     # terrain = Meshes(None)
-    # terrain.read_obj(os.path.join('Asset', 'Model', 'terrain.obj'))
+    # terrain.read_obj(os.path.join('Asset', 'Model', 'terrain.ply'))
     # terrain.obj.show()
 
     # universal_material = Material()

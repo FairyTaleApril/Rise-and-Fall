@@ -129,27 +129,19 @@ class PerlinNoiseGenerator:
             frequency *= lacunarity
 
         radius_increments = np.sum(np.array(radius_increments_list), axis=0)
-        radii = (max_height - min_height) * func(sphere.radius + radius_increments) + min_height
-        for latitude in range(sphere.latitude):
-            for longitude in range(sphere.longitude):
-                position = radii[latitude, longitude] * np.array(
-                    [np.sin(sphere.params[latitude, longitude, 0]) * np.cos(sphere.params[latitude, longitude, 1]),
-                     np.sin(sphere.params[latitude, longitude, 0]) * np.sin(sphere.params[latitude, longitude, 1]),
-                     np.cos(sphere.params[latitude, longitude, 0])])
-
-                sphere.vertices_map[latitude, longitude] = position
-                sphere.vertices_list[longitude + latitude * sphere.longitude] = position
+        sphere.radii = (max_height - min_height) * func(sphere.radius + radius_increments) + min_height
+        sphere.compute_vertices()
 
         print('Planet successfully generated')
 
     def generate_planet_thread(self, l0, l1, sphere, radius_increments, noise, frequency, amplitude):
         for latitude in range(l0, l1):
             for longitude in range(sphere.longitude):
-                sample_y = sphere.vertices_map[latitude, longitude, 0] * frequency / sphere.radius
-                sample_x = sphere.vertices_map[latitude, longitude, 1] * frequency / sphere.radius
-                sample_z = sphere.vertices_map[latitude, longitude, 2] * frequency / sphere.radius
+                sample_z = sphere.vertices_map[latitude, longitude, 0] * frequency / sphere.radius
+                sample_y = sphere.vertices_map[latitude, longitude, 1] * frequency / sphere.radius
+                sample_x = sphere.vertices_map[latitude, longitude, 2] * frequency / sphere.radius
 
-                perlin_value = amplitude * noise([sample_y, sample_x, sample_z])
+                perlin_value = amplitude * noise([sample_z, sample_y, sample_x])
                 radius_increments[latitude, longitude] = perlin_value
 
             self.update_progress(len(self.noise) * sphere.latitude)

@@ -1,6 +1,6 @@
 import math
 import numpy as np
-
+import matplotlib.cm as cm
 
 epsilon = 1e-6
 
@@ -41,12 +41,56 @@ def convert_map_to_3d(height_map: np.ndarray):
     return vertices, faces
 
 
-def save_model(filename, vertices, faces):
+def save_model(filename, vertices, faces, vertex_colors=None):
+    num_vertices = len(vertices)
+    num_faces = len(faces)
+
     with open(filename, 'w') as f:
-        for vertex in vertices:
-            f.write("v " + " ".join(str(v) for v in vertex) + "\n")
+        f.write("ply\n")
+        f.write("format ascii 1.0\n")
+        f.write("element vertex {}\n".format(num_vertices))
+        f.write("property float x\n")
+        f.write("property float y\n")
+        f.write("property float z\n")
+        if vertex_colors is not None:
+            f.write("property uchar red\n")
+            f.write("property uchar green\n")
+            f.write("property uchar blue\n")
+        f.write("element face {}\n".format(num_faces))
+        f.write("property list uchar int vertex_index\n")
+        f.write("end_header\n")
+
+        if vertex_colors is not None:
+            for i in range(num_vertices):
+                x, y, z = vertices[i]
+                r, g, b = vertex_colors[i]
+                f.write("{} {} {} {} {} {}\n".format(x, y, z, int(r), int(g), int(b)))
+        else:
+            for vertex in vertices:
+                x, y, z = vertex
+                f.write("{} {} {}\n".format(x, y, z))
 
         for face in faces:
-            f.write("f " + " ".join(str(f) for f in face) + "\n")
+            num_vertices_in_face = len(face)
+            f.write("{} ".format(num_vertices_in_face))
+            for vertex_index in face:
+                f.write("{} ".format(vertex_index))
+            f.write("\n")
 
 
+def map_2_list(_map):
+    height, width = _map.shape[:2]
+    _list = []
+
+    for y in range(height):
+        for x in range(width):
+            _list.append(_map[y, x].tolist())
+
+    return _list
+
+
+def value_2_color(values):
+    cmap_terrain = cm.get_cmap('terrain')
+    normalized_values = (values - np.min(values)) / (np.max(values) - np.min(values))
+    colors = (255 * np.array(cmap_terrain(normalized_values)[:, :3])).astype(int)
+    return colors
