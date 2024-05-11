@@ -10,6 +10,7 @@ class Meshes:
         self.obj = None
         self.faces = None
         self.vertices = None
+        self.vertex_colors = None  # 添加顶点颜色属性
 
         self.triangle_meshes = None
         self.bounds = None
@@ -26,6 +27,8 @@ class Meshes:
 
         self.faces = self.obj.faces
         self.vertices = self.obj.vertices
+        # get color
+        self.vertex_colors = self.obj.visual.vertex_colors
 
         self.create_meshes()
 
@@ -38,8 +41,10 @@ class Meshes:
         num_faces = len(self.faces)
         for i in range(num_faces):
             print('\rProcess: {:.1f}%'.format(100 * i / num_faces), end='')
+            if self.vertex_colors is not None:
+                colors = self.vertex_colors[self.faces[i]]  # 获取三个顶点的颜色
             mesh = TriangleMesh(self.vertices[self.faces[i][0]], self.vertices[self.faces[i][1]],
-                                self.vertices[self.faces[i][2]], self.material)
+                                self.vertices[self.faces[i][2]], colors[0], colors[1], colors[2], self.material)
             self.triangle_meshes.append(mesh)
             self.bounds.append(mesh.bound)
         print('\rProcess: 100.0%')
