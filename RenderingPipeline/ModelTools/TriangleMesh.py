@@ -57,3 +57,10 @@ class TriangleMesh:
             inter.material = self.material
             inter.uv_coords = [u, v]
         return inter
+
+    def get_color_at(self, u, v):
+        # Interpolate the RGB color values using bilinear interpolation
+        c0, c1, c2 = self.c0, self.c1, self.c2
+
+        color = c0 * (1 - u - v) + c1 * u + c2 * v
+        return color
