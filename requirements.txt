@@ -6,3 +6,5 @@ trimesh
 pyglet<2
 scipy
 trimesh[all]
+opencv-python
+noise

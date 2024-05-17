@@ -1,77 +1,101 @@
 import os
+import cv2
+import random
 import numpy as np
 
+from Generator.Hill import Hill
+from Generator.Mountain import Mountain
+from Generator.Normal import Normal
+from Generator.Terrain import Terrain
 from Global import *
-from PerlinNoiseMap import PerlinNoiseGenerator
+from Noise import Noise
+from RenderingPipeline.Light.Light import Light
 from RenderingPipeline.ModelTools.Sphere import Sphere
-from RenderingPipeline.Render import *
-from RenderingPipeline.Scene import *
-from RenderingPipeline.ModelTools.Meshes import *
+from RenderingPipeline.ModelTools.Meshes import Meshes
+from RenderingPipeline.Render import Render
+from RenderingPipeline.Scene import Scene
 
-width = 200
-height = 200
-max_height = 150
-min_height = 100
+seed = 1
+
+reso_scale = 1
+latitude = 100 * reso_scale
+longitude = 200 * reso_scale
+radius = 100
+
+# types = [Deep, Shallow, Shore, Grass, Hill, Mountain]
+height_range = [100, 102, 103, 103.5, 106, 108, 110]
 
 spp = 1
+scene_height = 100
+scene_width = 100
+
+planet_filepath = os.path.join('Asset', 'Model', 'planet.ply')
 
 if __name__ == '__main__':
-    perlin_generator = PerlinNoiseGenerator()
+    height_map = np.zeros((latitude, longitude), dtype=np.float64)
+    color_map = np.zeros((latitude, longitude), dtype=np.float64)
 
-    sphere = Sphere(100, 500)
-    # save_model(os.path.join('Asset', 'Model', 'sphere.ply'), sphere.vertices_list, sphere.faces)
-    # sphere_meshes = Meshes(filepath=os.path.join('Asset', 'Model', 'sphere.ply'))
+    terrain = Terrain(latitude, longitude, seed)
+    terrain.generate()
+    # show_images([terrain.terrain_map], 'grey')
+
+    # generators = []
+    # for i in range(4):
+    #     generators.append(Normal(latitude, longitude, seed, reso_scale))
+    # generators.append(Hill(latitude, longitude, seed, reso_scale))
+    # generators.append(Mountain(latitude, longitude, seed, reso_scale))
+    #
+    # for i in range(len(generators)):
+    #     generators[i].generate()
+    #     area = terrain.terrain_map == -i
+    #     normalized_map = generators[i].normalized_map
+    #
+    #     height_map[area] = map_value(normalized_map, area, height_range[i], height_range[i + 1] - height_range[i])[area]
+    #     color_map[area] = normalized_map[area] * (cmap_values[i + 1] - cmap_values[i]) + cmap_values[i]
+
+    vertex_colors = np.zeros((latitude, longitude, 3), dtype=np.float64)
+    for lati in range(latitude):
+        for longi in range(longitude):
+            vertex_colors[lati, longi] = my_cmap(terrain.normalized_map[lati, longi])[:3]
+    vertex_colors = (255 * vertex_colors).astype(int)
+
+    blur = cv2.GaussianBlur(terrain.terrain_map, (19, 19), 2)
+    show_images([terrain.terrain_map, blur], my_cmap)
+
+
+
+
+    # sphere = Sphere(latitude, longitude, radius)
+    # sphere.radii = terrain.normalized_map * 10 + 100
+    # # sphere.radii[normalized_map < 0.5] = normalized_map[normalized_map < 0.5] * terrain_height_range / 2 +\
+    # #     terrain_min_height + terrain_height_range / 4
+    # sphere.compute_vertices_position()
+    # # sphere.compute_vertices_color(normalized_map * 0.1 + 0.99)
+    #
+    # save_ply(planet_filepath, to_list(sphere.vertices_map), sphere.faces, to_list(vertex_colors))
+    # sphere_meshes = Meshes(planet_filepath)
+    # sphere_meshes.obj.show()
+    #
+    # sphere.radii = normalized_map2 * terrain_height_range + terrain_min_height
+    # # sphere.radii[normalized_map < 0.5] = normalized_map[normalized_map < 0.5] * terrain_height_range / 2 +\
+    # #     terrain_min_height + terrain_height_range / 4
+    # sphere.compute_vertices_position()
+    # sphere.compute_vertices_color(normalized_map2 * 0.1 + 0.99)
+    #
+    # save_ply(planet_filepath, to_list(sphere.vertices_map), sphere.faces, to_list(sphere.vertex_colors))
+    # sphere_meshes = Meshes(planet_filepath)
     # sphere_meshes.obj.show()
 
-    perlin_generator.generate_planet(sphere, max_height, min_height)
+    # pl.radii = cv2.GaussianBlur(pl.radii, (51, 51), 10)
 
-    vertex_colors = value_2_color(map_2_list(sphere.radii))
-
-    save_model(os.path.join('Asset', 'Model', 'planet.ply'),
-               map_2_list(sphere.vertices_map), sphere.faces, vertex_colors)
-
-    sphere_meshes = Meshes(filepath=os.path.join('Asset', 'Model', 'planet.ply'))
-    sphere_meshes.obj.show()
-
-    perlin_generator.display_map(sphere.radii)
-
-    # ocean_vertices, ocean_faces = perlin_generator.generate_planet(105, 100, 0)
+    # planet = Meshes(planet_filepath)
     #
-    # ocean_faces += len(planet_vertices)
-    # planet_faces = np.vstack((planet_faces, ocean_faces))
-    # planet_vertices = np.vstack((planet_vertices, ocean_vertices))
-
-    # save_model(os.path.join('Asset', 'Model', 'planet.ply'), planet_vertices, planet_faces)
+    # light = Light(np.array([150.0, 150.0, -150.0]), np.array([30000.0, 30000.0, 30000.0]))
     #
-    # planet = Meshes(filepath=os.path.join('Asset', 'Model', 'planet.ply'))
-    # planet.obj.show()
-
-    # terrain_map = perlin_generator.generate_map(width, height, max_height, min_height, func=PerlinNoiseMap.logistic,
-    #                                             frequency=2, gradient_scale=-0.5, persistence=0.1, lacunarity=2.0)
-    # perlin_generator.display_map(terrain_map)
-    #
-    # terrain_map_vertices, terrain_map_faces = convert_map_to_3d(terrain_map)
-    # save_map(os.path.join('Asset', 'Model', 'terrain.ply'), terrain_map_vertices, terrain_map_faces)
-    #
-    # terrain = Meshes(None)
-    # terrain.read_obj(os.path.join('Asset', 'Model', 'terrain.ply'))
-    # terrain.obj.show()
-
-    # universal_material = Material()
-    #
-    # cow = Meshes(universal_material)
-    # cow.read_obj('./Asset/Model/cow.obj')
-    # cow.obj.show()
-
-    # light = Light(np.array([0.0, 10.0, 0.0]), np.array([100.0, 100.0, 100.0]))
-    #
-    # scene = Scene(width, height, 90)
-    # scene.add(cow)
+    # scene = Scene(scene_height, scene_width, 90)
+    # scene.add(planet)
     # scene.add(light)
     # scene.build_BVH()
     #
-    # render = Render(scene, np.array([0.0, 0.0, -2.0]), spp)
+    # render = Render(scene, np.array([0.0, 0.0, -150.0]), spp)
     # render.render()
-
-    # mesh = trimesh.Trimesh(vertices=cow.vertices, faces=cow.faces, face_colors=[100, 100, 100])
-    # mesh.show()

@@ -1,5 +1,6 @@
 import numpy as np
 
+from Global import *
 from RenderingPipeline.Light.Light import *
 from RenderingPipeline.ModelTools.Meshes import *
 from RenderingPipeline.ModelTools.Material import *
@@ -47,9 +48,9 @@ def fresnel(I, N, ior):
 
 
 class Scene:
-    def __init__(self, width, height, fov, background_color=np.array([0.0, 0.0, 0.0])):
-        self.width = width
+    def __init__(self, height, width, fov, background_color=np.array([0.0, 0.0, 0.0])):
         self.height = height
+        self.width = width
         self.fov = fov
         self.background_color = background_color
 
@@ -85,11 +86,11 @@ class Scene:
                 hit_point = inter.coords + inter.N * epsilon if np.dot(ray.direction, inter.N) < 0\
                     else inter.coords - inter.N * epsilon
 
-                texture_color = inter.material.get_color_at(inter.uv_coords[0], inter.uv_coords[1])
+                texture_color = inter.triangle_mesh.get_color_at(inter.uv_coords[0], inter.uv_coords[1])
                 Kd = inter.material.Kd
                 Ks = inter.material.Ks
 
-                La = inter.material.Ka * texture_color
+                La = inter.material.Ka * texture_color / 255
                 result_color = La
 
                 for light in self.lights:
@@ -104,7 +105,7 @@ class Scene:
 
                     h = normalize(ray.direction + l)
                     Ls = Ks * I_r2 * max(0.0, float(np.dot(inter.N, h))) ** inter.material.specular_exponent
-
+                    # print(Ld + Ls)
                     result_color += Ld + Ls
                 return result_color
             elif inter.material.material_type is MaterialType.Reflection_Refraction:

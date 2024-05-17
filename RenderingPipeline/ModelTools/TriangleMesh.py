@@ -8,10 +8,13 @@ from RenderingPipeline.RayTracingTools.Intersection import *
 
 
 class TriangleMesh:
-    def __init__(self, v0, v1, v2, material, N=None):
+    def __init__(self, v0, v1, v2, c0, c1, c2, material):
         self.v0 = v0
         self.v1 = v1
         self.v2 = v2
+        self.c0 = c0
+        self.c1 = c1
+        self.c2 = c2
         self.material = material
 
         self.e1 = v1 - v0
@@ -60,7 +63,5 @@ class TriangleMesh:
 
     def get_color_at(self, u, v):
         # Interpolate the RGB color values using bilinear interpolation
-        c0, c1, c2 = self.c0, self.c1, self.c2
-
-        color = c0 * (1 - u - v) + c1 * u + c2 * v
+        color = self.c0 * (1 - u - v) + self.c1 * u + self.c2 * v
         return color

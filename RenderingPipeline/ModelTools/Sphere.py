@@ -1,26 +1,27 @@
 import numpy as np
 
+from Global import *
+
 
 class Sphere:
-    def __init__(self, radius, num_segments):
+    def __init__(self, latitude, longitude, radius):
+        self.latitude = latitude
+        self.longitude = longitude
         self.radius = radius
-        self.num_segments = num_segments
-        self.latitude = num_segments
-        self.longitude = num_segments
 
         self.vertices_map = np.zeros((self.latitude, self.longitude, 3), dtype=float)
         self.params = np.zeros((self.latitude, self.longitude, 2), dtype=float)
         self.faces = []
         self.radii = self.radius * np.ones((self.latitude, self.longitude), dtype=float)
+        self.vertex_colors = np.zeros((self.latitude, self.longitude, 3), dtype=float)
 
         for latitude in range(self.latitude):
-            theta = latitude * np.pi / (self.longitude - 1)
+            theta = latitude * np.pi / (self.latitude - 1)
 
             for longitude in range(self.longitude):
                 phi = longitude * 2 * np.pi / self.longitude
 
-                position = radius * np.array([np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi), np.cos(theta)])
-                self.vertices_map[latitude, longitude] = position
+                self.vertices_map[latitude, longitude] = sphere_position(theta, phi, radius)
                 self.params[latitude, longitude] = np.array([theta, phi])
 
         for latitude in range(self.latitude - 1):
@@ -35,12 +36,20 @@ class Sphere:
                     self.faces.append([index + self.longitude, next_index, index])
                     self.faces.append([index + self.longitude, next_index + self.longitude, next_index])
 
-    def compute_vertices(self):
+    def compute_vertices_position(self, height_map=None):
+        radii = self.radii if height_map is None else height_map
+
         for latitude in range(self.latitude):
             for longitude in range(self.longitude):
-                position = self.radii[latitude, longitude] * np.array(
-                    [np.sin(self.params[latitude, longitude, 0]) * np.cos(self.params[latitude, longitude, 1]),
-                     np.sin(self.params[latitude, longitude, 0]) * np.sin(self.params[latitude, longitude, 1]),
-                     np.cos(self.params[latitude, longitude, 0])])
-
+                position = sphere_position(self.params[latitude, longitude, 0], self.params[latitude, longitude, 1],
+                                           radii[latitude, longitude])
                 self.vertices_map[latitude, longitude] = position
+
+    def compute_vertices_color(self, normalized_map=None):
+        if normalized_map is None:
+            normalized_map = (self.radii - np.min(self.radii)) / (np.max(self.radii) - np.min(self.radii))
+
+        for latitude in range(self.latitude):
+            for longitude in range(self.longitude):
+                self.vertex_colors[latitude, longitude] = my_cmap(normalized_map[latitude, longitude])[:3]
+        self.vertex_colors = (255 * self.vertex_colors).astype(int)

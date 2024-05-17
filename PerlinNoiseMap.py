@@ -2,8 +2,6 @@ import os
 import threading
 import numpy as np
 from perlin_noise import PerlinNoise
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
 
 from RenderingPipeline.ModelTools.Sphere import Sphere
 
@@ -28,11 +26,9 @@ class PerlinNoiseGenerator:
         for octaves in octaves_list:
             self.noise.append(PerlinNoise(octaves=octaves, seed=seed))
 
-        self.terrain_colors = 'terrain'
-
         self.progress = 0
 
-    def generate_map(self, width, height, max_height, min_height, func=logistic,
+    def generate_map(self, width, height, max_height, min_height, func=linear,
                      frequency=1, gradient_scale=1.0, persistence=0.1, lacunarity=2.0):
         print('Start generating map ...')
 
@@ -88,14 +84,15 @@ class PerlinNoiseGenerator:
 
             self.update_progress((len(self.noise) * height))
 
-    def generate_planet(self, sphere: Sphere, max_height, min_height, func=logistic,
-                        frequency=1, gradient_scale=1.0, persistence=0.1, lacunarity=2.0):
+    def generate_planet(self, sphere: Sphere, max_height, min_height, func=linear,
+                        gradient_scale=1.0, persistence=0.5, lacunarity=1.0):
         print('Start generating planet ...')
 
         amplitude = 1
-        frequency = frequency
-        gradient_magnitude_list = []
+        frequency = 0.5
+        # gradient_magnitude_list = []
         radius_increments_list = []
+        # radius_increments = np.zeros(sphere.vertices_map.shape[:2], dtype=float)
 
         self.progress = 0
 
@@ -117,12 +114,12 @@ class PerlinNoiseGenerator:
             for worker in workers:
                 worker.join()
 
-            gradient_x, gradient_y = np.gradient(radius_increments)
-            gradient_magnitude = np.sqrt(gradient_x ** 2 + gradient_y ** 2)
-            gradient_magnitude_list.append(gradient_magnitude)
-
-            reduce_map = 1 / (1 + gradient_scale * np.sum(gradient_magnitude_list, axis=0))
-            radius_increments = (radius_increments - reduce_map) / len(self.noise)
+            # gradient_x, gradient_y = np.gradient(radius_increments)
+            # gradient_magnitude = np.sqrt(gradient_x ** 2 + gradient_y ** 2)
+            # gradient_magnitude_list.append(gradient_magnitude)
+            #
+            # reduce_map = 1 / (1 + gradient_scale * np.sum(gradient_magnitude_list, axis=0))
+            # radius_increments = (radius_increments - reduce_map) / len(self.noise)
             radius_increments_list.append(radius_increments)
 
             amplitude *= persistence
@@ -130,6 +127,8 @@ class PerlinNoiseGenerator:
 
         radius_increments = np.sum(np.array(radius_increments_list), axis=0)
         sphere.radii = (max_height - min_height) * func(sphere.radius + radius_increments) + min_height
+
+        # sphere.radii = radius_increments
         sphere.compute_vertices()
 
         print('Planet successfully generated')
@@ -137,11 +136,14 @@ class PerlinNoiseGenerator:
     def generate_planet_thread(self, l0, l1, sphere, radius_increments, noise, frequency, amplitude):
         for latitude in range(l0, l1):
             for longitude in range(sphere.longitude):
-                sample_z = sphere.vertices_map[latitude, longitude, 0] * frequency / sphere.radius
-                sample_y = sphere.vertices_map[latitude, longitude, 1] * frequency / sphere.radius
-                sample_x = sphere.vertices_map[latitude, longitude, 2] * frequency / sphere.radius
+                # sample_z = sphere.vertices_map[latitude, longitude, 0] * frequency / sphere.radius
+                # sample_y = sphere.vertices_map[latitude, longitude, 1] * frequency / sphere.radius
+                # sample_x = sphere.vertices_map[latitude, longitude, 2] * frequency / sphere.radius
+                #
+                # perlin_value = amplitude * noise([sample_z, sample_y, sample_x])
 
-                perlin_value = amplitude * noise([sample_z, sample_y, sample_x])
+                sample_y, sample_x = latitude * frequency / sphere.radius, longitude * frequency / sphere.radius
+                perlin_value = amplitude * noise([sample_y, sample_x])
                 radius_increments[latitude, longitude] = perlin_value
 
             self.update_progress(len(self.noise) * sphere.latitude)
@@ -154,10 +156,7 @@ class PerlinNoiseGenerator:
         else:
             print('\rProgress: {:.1f}%'.format(percentage), end='')
 
-    def display_map(self, terrain_map):
-        plt.imshow(terrain_map, cmap=self.terrain_colors)
-        plt.colorbar()
-        plt.show()
-
-    def set_terrain_colors(self, terrain_colors):
-        self.terrain_colors = ListedColormap(terrain_colors)
+    def value_2_color(self, values):
+        normalized_values = (values - np.min(values)) / (np.max(values) - np.min(values))
+        colors = (255 * np.array(self.terrain_colors(normalized_values)[:, :3])).astype(int)
+        return colors

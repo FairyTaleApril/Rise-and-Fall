@@ -42,8 +42,6 @@ class Render:
         plt.imshow(self.frame_buffer)
         plt.show()
 
-        print('Render complete')
-
     def render_thread(self, y0, y1):
         for y in range(y0, y1):
             for x in range(self.scene.width):

@@ -1,8 +1,18 @@
 import math
 import numpy as np
-import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 
 epsilon = 1e-6
+
+# # colors = [Deep, Shallow, Shore, Sand, Grass, Dirt, Rock, Snow]
+# cmap_colors = [(0, 0, 0.5), (0, 0, 1), (0, 0.5, 1), (0.94, 0.94, 0.25),
+#               (0.13, 0.63, 0), (0.88, 0.88, 0), (0.5, 0.5, 0.5), (1, 1, 1)]
+# cmap_values = [0.0, 0.4, 0.5, 0.55, 0.7, 0.8, 0.95, 1.0]
+# colors = [Deep, Shallow, Shore, Grass, Hill, Mountain]
+cmap_colors = [(0, 0, 0.5), (0, 0, 1), (0, 0.5, 1), (0.94, 0.94, 0.25), (0.13, 0.63, 0), (0.5, 0.5, 0.5), (1, 1, 1)]
+cmap_values = [0.0, 0.4, 0.5, 0.55, 0.75, 0.9, 1.0]
+my_cmap = LinearSegmentedColormap.from_list('my_colormap', list(zip(cmap_values, cmap_colors)))
 
 
 def normalize(vector):
@@ -13,12 +23,39 @@ def normalize(vector):
         return vector / norm
 
 
+def map_value(_map, area=None, min_value=0, value_range=1):
+    if area is None:
+        lowest = np.min(_map)
+        return (_map - lowest) / (np.max(_map) - lowest) * value_range + min_value
+    else:
+        lowest = np.min(_map[area])
+        return (_map - lowest) / (np.max(_map[area]) - lowest) * value_range + min_value
+
+
 def deg2rad(deg):
     return deg * np.pi / 180.0
 
 
-def lerp(v0, v1, t):
-    return (1 - t) * v0 + t * v1
+def show_images(images, cmap=None):
+    if len(images) == 1:
+        plt.imshow(images[0], cmap=cmap)
+        plt.colorbar()
+    else:
+        fig, axes = plt.subplots(len(images), 1)
+        for index, image in enumerate(images):
+            im = axes[index].imshow(image, cmap=cmap)
+            fig.colorbar(im)
+    plt.show()
+
+
+def sphere_position(theta, phi, radius=1):
+    return radius * np.array([np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi), np.cos(theta)])
+
+
+def map_color(values, cmap=my_cmap):
+    normalized_values = (values - np.min(values)) / (np.max(values) - np.min(values))
+    colors = (255.0 * np.array(cmap(normalized_values)[:, :3])).astype(int)
+    return colors
 
 
 def convert_map_to_3d(height_map: np.ndarray):
@@ -41,7 +78,7 @@ def convert_map_to_3d(height_map: np.ndarray):
     return vertices, faces
 
 
-def save_model(filename, vertices, faces, vertex_colors=None):
+def save_ply(filename, vertices, faces, vertex_colors=None):
     num_vertices = len(vertices)
     num_faces = len(faces)
 
@@ -78,7 +115,19 @@ def save_model(filename, vertices, faces, vertex_colors=None):
             f.write("\n")
 
 
-def map_2_list(_map):
+def save_obj(filename, vertices, faces):
+    with open(filename, 'w') as f:
+        for vertex in vertices:
+            f.write("v {} {} {}\n".format(vertex[0], vertex[1], vertex[2]))
+
+        for face in faces:
+            f.write("f")
+            for vertex_index in face:
+                f.write(" {}".format(vertex_index))
+            f.write("\n")
+
+
+def to_list(_map):
     height, width = _map.shape[:2]
     _list = []
 
@@ -87,10 +136,3 @@ def map_2_list(_map):
             _list.append(_map[y, x].tolist())
 
     return _list
-
-
-def value_2_color(values):
-    cmap_terrain = cm.get_cmap('terrain')
-    normalized_values = (values - np.min(values)) / (np.max(values) - np.min(values))
-    colors = (255 * np.array(cmap_terrain(normalized_values)[:, :3])).astype(int)
-    return colors
