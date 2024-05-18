@@ -17,41 +17,71 @@ from RenderingPipeline.Scene import Scene
 
 seed = 1
 
-reso_scale = 1
+# Sphere
+reso_scale = 6
 latitude = 100 * reso_scale
 longitude = 200 * reso_scale
 radius = 100
 
-# types = [Deep, Shallow, Shore, Grass, Hill, Mountain]
-height_range = [100, 102, 103, 103.5, 106, 108, 110]
+# Terrain
+# types = [Deep, Shallow, Shore, Grass, Hill, Dirt, Mountain]
+terrain_types = [0.0, 0.4, 0.5, 0.55, 0.7, 0.8, 0.9, 1.0]
+mountain_raise = 2.0
+dirt_raise = 1.5
+hill_raise = 0.3
+land_raise = 0.1
 
-spp = 1
-scene_height = 100
-scene_width = 100
+# Render
+spp = 8
+resolution = 4
+scene_height = 100 * resolution
+scene_width = 100 * resolution
 
 planet_filepath = os.path.join('Asset', 'Model', 'planet.ply')
 
 if __name__ == '__main__':
-    height_map = np.zeros((latitude, longitude), dtype=np.float64)
-    color_map = np.zeros((latitude, longitude), dtype=np.float64)
-
-    terrain = Terrain(latitude, longitude, seed)
+    terrain = Terrain(latitude, longitude, terrain_types, seed)
     terrain.generate()
-    # show_images([terrain.terrain_map], 'grey')
+    show_images([-1 * terrain.terrain_map], my_terrain_cmap)
 
-    # generators = []
-    # for i in range(4):
-    #     generators.append(Normal(latitude, longitude, seed, reso_scale))
-    # generators.append(Hill(latitude, longitude, seed, reso_scale))
-    # generators.append(Mountain(latitude, longitude, seed, reso_scale))
-    #
-    # for i in range(len(generators)):
-    #     generators[i].generate()
-    #     area = terrain.terrain_map == -i
-    #     normalized_map = generators[i].normalized_map
-    #
-    #     height_map[area] = map_value(normalized_map, area, height_range[i], height_range[i + 1] - height_range[i])[area]
-    #     color_map[area] = normalized_map[area] * (cmap_values[i + 1] - cmap_values[i]) + cmap_values[i]
+    ocean = Normal(latitude, longitude, seed)
+    ocean.generate()
+
+    land = Normal(latitude, longitude, seed)
+    land.generate()
+
+    hill = Hill(latitude, longitude, seed)
+    hill.generate()
+
+    mountain = Mountain(latitude, longitude, seed)
+    mountain.generate()
+
+    boundary = terrain.terrain_map.copy()
+    boundary[boundary > -3] = 0
+    boundary[boundary <= -3] = 1
+    blur = cv2.GaussianBlur(boundary, (15, 15), 2)
+    height_map = (land.normalized_map + land_raise) * blur + ocean.normalized_map * (1 - blur)
+
+    boundary = terrain.terrain_map.copy()
+    boundary[boundary > -4] = 0
+    boundary[boundary <= -4] = 1
+    blur = cv2.GaussianBlur(boundary, (15, 15), 2)
+    height_map = (hill.normalized_map + hill_raise) * blur + height_map * (1 - blur)
+
+    boundary = terrain.terrain_map.copy()
+    boundary[boundary > -5] = 0
+    boundary[boundary <= -5] = 1
+    blur = cv2.GaussianBlur(boundary, (15, 15), 2)
+    height_map = (mountain.normalized_map + dirt_raise) * blur + height_map * (1 - blur)
+
+    boundary = terrain.terrain_map.copy()
+    boundary[boundary > -6] = 0
+    boundary[boundary <= -6] = 1
+    blur = cv2.GaussianBlur(boundary, (15, 15), 2)
+    height_map = (mountain.normalized_map + mountain_raise) * blur + height_map * (1 - blur)
+
+
+
 
     vertex_colors = np.zeros((latitude, longitude, 3), dtype=np.float64)
     for lati in range(latitude):
@@ -59,43 +89,28 @@ if __name__ == '__main__':
             vertex_colors[lati, longi] = my_cmap(terrain.normalized_map[lati, longi])[:3]
     vertex_colors = (255 * vertex_colors).astype(int)
 
-    blur = cv2.GaussianBlur(terrain.terrain_map, (19, 19), 2)
-    show_images([terrain.terrain_map, blur], my_cmap)
+    sphere = Sphere(latitude, longitude, radius)
+    sphere.radii = height_map * 10 + 100
+    sphere.compute_vertices_position()
 
-
-
-
-    # sphere = Sphere(latitude, longitude, radius)
-    # sphere.radii = terrain.normalized_map * 10 + 100
-    # # sphere.radii[normalized_map < 0.5] = normalized_map[normalized_map < 0.5] * terrain_height_range / 2 +\
-    # #     terrain_min_height + terrain_height_range / 4
-    # sphere.compute_vertices_position()
-    # # sphere.compute_vertices_color(normalized_map * 0.1 + 0.99)
-    #
-    # save_ply(planet_filepath, to_list(sphere.vertices_map), sphere.faces, to_list(vertex_colors))
-    # sphere_meshes = Meshes(planet_filepath)
-    # sphere_meshes.obj.show()
-    #
-    # sphere.radii = normalized_map2 * terrain_height_range + terrain_min_height
-    # # sphere.radii[normalized_map < 0.5] = normalized_map[normalized_map < 0.5] * terrain_height_range / 2 +\
-    # #     terrain_min_height + terrain_height_range / 4
-    # sphere.compute_vertices_position()
-    # sphere.compute_vertices_color(normalized_map2 * 0.1 + 0.99)
-    #
-    # save_ply(planet_filepath, to_list(sphere.vertices_map), sphere.faces, to_list(sphere.vertex_colors))
+    save_ply(planet_filepath, to_list(sphere.vertices_map), sphere.faces, to_list(vertex_colors))
     # sphere_meshes = Meshes(planet_filepath)
     # sphere_meshes.obj.show()
 
-    # pl.radii = cv2.GaussianBlur(pl.radii, (51, 51), 10)
 
-    # planet = Meshes(planet_filepath)
-    #
-    # light = Light(np.array([150.0, 150.0, -150.0]), np.array([30000.0, 30000.0, 30000.0]))
-    #
-    # scene = Scene(scene_height, scene_width, 90)
-    # scene.add(planet)
-    # scene.add(light)
-    # scene.build_BVH()
-    #
-    # render = Render(scene, np.array([0.0, 0.0, -150.0]), spp)
-    # render.render()
+
+
+
+
+    planet = Meshes(planet_filepath)
+    planet.obj.show()
+
+    light = Light(np.array([300.0, 300.0, -300.0]), np.array([150000.0, 150000.0, 150000.0]))
+
+    scene = Scene(scene_height, scene_width, 90)
+    scene.add(planet)
+    scene.add(light)
+    scene.build_BVH()
+
+    render = Render(scene, np.array([0.0, 0.0, -170.0]), spp)
+    render.render()

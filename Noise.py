@@ -11,12 +11,10 @@ class NoiseType(Enum):
 
 
 class Noise:
-    def __init__(self, seed, octaves, frequency=70, amplitude=1.0,
-                 offset_x=0.0, offset_y=0.0, noise_type=NoiseType.perlin):
+    def __init__(self, seed, octaves, frequency=70, offset_x=0.0, offset_y=0.0, noise_type=NoiseType.perlin):
         self.seed = seed
         self.octaves = octaves
         self.frequency = frequency
-        self.amplitude = amplitude
         self.offset_x = offset_x
         self.offset_y = offset_y
         self.noise_type = noise_type
@@ -39,5 +37,4 @@ class Noise:
                 noise_map[y, x] = perlin_value
 
         print('\rGenerating map: 100.0%')
-        noise_map *= self.amplitude
         return noise_map

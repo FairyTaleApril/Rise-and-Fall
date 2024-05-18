@@ -1,6 +1,6 @@
 import numpy as np
 
-from Noise import Noise, NoiseType
+from Noise import Noise
 from Global import *
 
 
@@ -10,13 +10,12 @@ class Mountain:
         self.longitude = longitude
 
         self.octaves_list = np.array([4, 8, 16, 32])
-        self.frequency_list = np.array([1.5, 2, 2.5, 3])
+        self.frequency_list = np.array([4, 8, 16, 32])
         self.amplitude_list = np.array([1, 1, 1, 1])
 
         self.noises = []
         for i in range(len(self.octaves_list)):
-            self.noises.append(Noise(seed, self.octaves_list[i], self.frequency_list[i], self.amplitude_list[i],
-                                     offset_x=0.0, offset_y=0.0, noise_type=NoiseType.simple))
+            self.noises.append(Noise(seed, self.octaves_list[i], self.frequency_list[i], offset_x=0.0, offset_y=0.0))
 
         self.normalized_map = None
 
@@ -25,6 +24,6 @@ class Mountain:
 
         noise_map = np.zeros((self.latitude, self.longitude), dtype=float)
         for i in range(len(self.noises)):
-            noise_map += self.amplitude_list[i] * \
-                         np.tan(self.noises[i].sphere_noise(self.latitude, self.longitude) * np.pi / 2)
+            noise_map += self.amplitude_list[i] * self.noises[i].sphere_noise(self.latitude, self.longitude)
+        noise_map = np.tan(map_value(noise_map) * np.pi / 2)
         self.normalized_map = map_value(noise_map)

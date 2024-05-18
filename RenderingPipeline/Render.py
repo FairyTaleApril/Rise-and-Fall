@@ -7,6 +7,22 @@ from Global import *
 from RenderingPipeline.RayTracingTools.Ray import *
 
 
+def create_rotation_matrix(angle, axis):
+    axis = normalize(axis)
+    cos_theta = np.cos(np.radians(angle))
+    sin_theta = np.sin(np.radians(angle))
+    one_minus_cos = 1 - cos_theta
+    x, y, z = axis
+
+    rotation_matrix = np.array([
+        [cos_theta + x*x*one_minus_cos, x*y*one_minus_cos - z*sin_theta, x*z*one_minus_cos + y*sin_theta],
+        [y*x*one_minus_cos + z*sin_theta, cos_theta + y*y*one_minus_cos, y*z*one_minus_cos - x*sin_theta],
+        [z*x*one_minus_cos - y*sin_theta, z*y*one_minus_cos + x*sin_theta, cos_theta + z*z*one_minus_cos]
+    ])
+
+    return rotation_matrix
+
+
 class Render:
     def __init__(self, scene, eye_coords, spp):
         self.scene = scene
@@ -50,6 +66,8 @@ class Render:
                     sample_x = (2 * (x + random.random()) / self.scene.width - 1) * self.image_aspect_ratio * self.scale
                     sample_y = (1 - 2 * (y + random.random()) / self.scene.height) * self.scale
                     direction = normalize(np.array([sample_x, sample_y, 1]))
+                    # rotated_direction = normalize(self.rotation_matrix @ direction)
+
                     ray = Ray(self.eye_coords, direction)
                     self.frame_buffer[y, x] += self.scene.cast_ray(ray, 0) / self.spp
 

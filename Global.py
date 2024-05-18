@@ -9,10 +9,16 @@ epsilon = 1e-6
 # cmap_colors = [(0, 0, 0.5), (0, 0, 1), (0, 0.5, 1), (0.94, 0.94, 0.25),
 #               (0.13, 0.63, 0), (0.88, 0.88, 0), (0.5, 0.5, 0.5), (1, 1, 1)]
 # cmap_values = [0.0, 0.4, 0.5, 0.55, 0.7, 0.8, 0.95, 1.0]
-# colors = [Deep, Shallow, Shore, Grass, Hill, Mountain]
+# colors = [Deep, Shallow, Shore, Grass, Hill, Dirt, Mountain]
 cmap_colors = [(0, 0, 0.5), (0, 0, 1), (0, 0.5, 1), (0.94, 0.94, 0.25), (0.13, 0.63, 0), (0.5, 0.5, 0.5), (1, 1, 1)]
-cmap_values = [0.0, 0.4, 0.5, 0.55, 0.75, 0.9, 1.0]
+cmap_values = [0.0, 0.4, 0.5, 0.55, 0.7, 0.9, 1.0]
 my_cmap = LinearSegmentedColormap.from_list('my_colormap', list(zip(cmap_values, cmap_colors)))
+
+# types = [Deep, Shallow, Shore, Grass, Hill, Dirt, Mountain]
+cmap_terrain_colors = [(0, 0, 0.5), (0, 0, 1), (0, 0.5, 1),
+                       (0.94, 0.94, 0.25), (0.13, 0.63, 0), (0.5, 0.5, 0.5), (1, 1, 1)]
+cmap_terrain_values = [0.0, 1 / 6, 2 / 6, 3 / 6, 4 / 6, 5 / 6, 1.0]
+my_terrain_cmap = LinearSegmentedColormap.from_list('my_colormap', list(zip(cmap_terrain_values, cmap_terrain_colors)))
 
 
 def normalize(vector):

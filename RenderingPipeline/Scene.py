@@ -73,8 +73,6 @@ class Scene:
                 triangle_meshes.append(triangle_mesh)
         self.bvh = BVH(triangle_meshes)
 
-        print('BVH successfully built')
-
     def cast_ray(self, ray: Ray, depth):
         if depth > self.max_depth:
             return self.background_color
@@ -105,7 +103,7 @@ class Scene:
 
                     h = normalize(ray.direction + l)
                     Ls = Ks * I_r2 * max(0.0, float(np.dot(inter.N, h))) ** inter.material.specular_exponent
-                    # print(Ld + Ls)
+
                     result_color += Ld + Ls
                 return result_color
             elif inter.material.material_type is MaterialType.Reflection_Refraction:

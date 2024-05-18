@@ -12,7 +12,11 @@ class BVHNode:
 
 class BVH:
     def __init__(self, triangle_meshes):
+        self.num_node = 0
+        self.num_triangle_meshes = len(triangle_meshes)
+
         self.root = self.recursive_build(triangle_meshes)
+        print('\rBuilding BVH: 100.0%')
 
     def recursive_build(self, triangle_meshes):
         node = BVHNode()
@@ -20,6 +24,9 @@ class BVH:
         if len(triangle_meshes) == 1:
             node.bound = triangle_meshes[0].bound
             node.triangle_mesh = triangle_meshes[0]
+
+            self.num_node += 1
+            print('\rBuilding BVH: {:.1f}%'.format(100 * self.num_node / self.num_triangle_meshes), end='')
         elif len(triangle_meshes) == 2:
             node.left = self.recursive_build([triangle_meshes[0]])
             node.right = self.recursive_build([triangle_meshes[1]])

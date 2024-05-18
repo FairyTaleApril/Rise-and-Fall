@@ -15,8 +15,7 @@ class Normal:
 
         self.noises = []
         for i in range(len(self.octaves_list)):
-            self.noises.append(Noise(seed, self.octaves_list[i], self.frequency_list[i], self.amplitude_list[i],
-                                     offset_x=0.0, offset_y=0.0))
+            self.noises.append(Noise(seed, self.octaves_list[i], self.frequency_list[i], offset_x=0.0, offset_y=0.0))
 
         self.normalized_map = None
 
