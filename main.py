@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
 
     planet = Meshes(planet_filepath)
-    planet.obj.show()
+    # planet.obj.show()
 
     light = Light(np.array([300.0, 300.0, -300.0]), np.array([150000.0, 150000.0, 150000.0]))
 
