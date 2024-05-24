@@ -24,6 +24,7 @@ To generate and render a planet, run the main.py script.
 At runtime, some result images may pop up.
 Closing the popped-up windows will allow the program to continue running until the planet is fully rendered using the ray tracing pipeline.
 
+## Attention
 Please check if you have successfully install visual studio C++ build tools before running it, which can be downloaded at https://visualstudio.microsoft.com/zh-hans/downloads/.
 
 If the render result does not pop up, please add the followings in main.py:
